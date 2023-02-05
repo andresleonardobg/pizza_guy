@@ -6,16 +6,19 @@ export (float) var time_animation := 1.0
 onready var collision_anim := get_node("CollisionShape2D")
 onready var animation_sprite := get_node("CollisionShape2D/AnimatedSprite")
 onready var climbing_sprite := get_node("climbingSprite")
-onready var ray_cast_climb := [get_node("CollisionShape2D/climb/over_the_head"), get_node("CollisionShape2D/climb/head")]
+onready var ray_cast_climb := [get_node("climb/over_the_head"), get_node("climb/head")]
 onready var animation_player_climb : = get_node("AnimationPlayer")
+onready var floor_ray := get_node("floor")
 
 var walk : float
 var has_gun : bool
 var climb : bool = false
 var side_of_look : bool
 var key_is_pressed
+var climbing : bool = false
 
 enum States{
+	IDLE,
 	WALK,
 	SKATING,
 	FLYING,
@@ -36,14 +39,10 @@ func _physics_process(delta: float) -> void:
 		get_corner_to_climbing()
 		gravity = 0
 		move.y = 0
-		
 		if Input.is_action_just_pressed("up"):
 			climbing_animation()
-			
 		else:
 			animation_sprite.animation = "climb"
-
-	walk = Input.get_action_strength("right") - Input.get_action_strength("left")
 	
 	# if has_gun:
 	# 	animation_sprite.animation = "run_with_gun" if walk != 0 else "idle_with_gun"
@@ -51,20 +50,27 @@ func _physics_process(delta: float) -> void:
 
 	
 	if climb == false : 
+
+		walk = Input.get_action_strength("right") - Input.get_action_strength("left")
 		
 		flip_player(side_of_look)
 		
 		if Input.is_action_pressed("down") : 
 			animation_sprite.animation = "bend"
-		elif walk != 0:
+		elif walk != 0 and climbing == false:
 			animation_sprite.animation = "walk" 
-		# elif Input.:
-		# 	animation_sprite.animation = "idle"
+		else:
+			animation_sprite.animation = "idle"
 	
-	if Input.is_action_pressed("jump") and is_on_floor():
+		if !floor_ray.is_colliding() and climbing == false:
+			animation_sprite.animation = "jump"
+
+	if Input.is_action_just_pressed("jump") and is_on_floor():
 		move.y = -jump * delta
 	
 	move.x = walk * velocity * delta
+
+	print(is_on_floor())
 
 
 #functions
@@ -91,8 +97,8 @@ func add_climbing_r_animation() -> void:
 func flip_player(value: bool):
 	climbing_sprite.flip_h = value
 	animation_sprite.flip_h = value
-	ray_cast_climb[0].cast_to.x = -20 if value else 20
-	ray_cast_climb[1].cast_to.x = -20 if value else 20
+	ray_cast_climb[0].cast_to.x = -15 if value else 15
+	ray_cast_climb[1].cast_to.x = -15 if value else 15
 
 func get_corner_to_climbing() -> void:
 	var position_cell = ray_cast_climb[1].global_position - ray_cast_climb[1].get_collision_normal()
@@ -101,6 +107,7 @@ func get_corner_to_climbing() -> void:
 	global_position.y = p.y + off_set
 
 func climbing_animation() -> void:
+	climbing = true
 	animation_sprite.visible = false
 	climbing_sprite.visible = true
 	animation_player_climb.play("climbing" if climbing_sprite.flip_h else "climbing_r")
@@ -111,7 +118,8 @@ func return_g() -> void:
 	animation_sprite.animation = "idle"
 
 
-func _on_AnimationPlayer_animation_finished(anim_name: String) -> void:
+func _on_AnimationPlayer_animation_finished(_anim_name: String) -> void:
+	climbing = false
 	animation_sprite.visible = true
 	climbing_sprite.visible = false
 	animation_player_climb.clear_caches()

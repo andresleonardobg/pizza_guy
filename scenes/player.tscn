@@ -1,9 +1,8 @@
-[gd_scene load_steps=58 format=2]
+[gd_scene load_steps=57 format=2]
 
 [ext_resource path="res://scripts/player.gd" type="Script" id=1]
 [ext_resource path="res://assets/img/sprite_sheet_player.png" type="Texture" id=2]
 [ext_resource path="res://assets/img/climbing.png" type="Texture" id=3]
-[ext_resource path="res://icon.png" type="Texture" id=4]
 
 [sub_resource type="RectangleShape2D" id=1]
 extents = Vector2( 13, 32 )
@@ -328,11 +327,8 @@ tracks/2/keys = {
 
 [node name="player" type="KinematicBody2D"]
 scale = Vector2( 1.7, 1.7 )
+collision/safe_margin = 0.09
 script = ExtResource( 1 )
-velocity = null
-map = null
-off_set = null
-time_animation = null
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource( 1 )
@@ -348,20 +344,6 @@ animation = "idle"
 playing = true
 flip_h = true
 
-[node name="climb" type="Node2D" parent="CollisionShape2D"]
-
-[node name="over_the_head" type="RayCast2D" parent="CollisionShape2D/climb"]
-position = Vector2( 0, -40 )
-enabled = true
-cast_to = Vector2( 20, 0 )
-collision_mask = 2
-
-[node name="head" type="RayCast2D" parent="CollisionShape2D/climb"]
-position = Vector2( 0, -30 )
-enabled = true
-cast_to = Vector2( 20, 0 )
-collision_mask = 2
-
 [node name="climbingSprite" type="Sprite" parent="."]
 visible = false
 position = Vector2( 0, -10 )
@@ -373,14 +355,23 @@ hframes = 15
 anims/RESET = SubResource( 76 )
 anims/climbing = SubResource( 77 )
 
-[node name="Node2D" type="Node2D" parent="AnimationPlayer"]
-visible = false
-scale = Vector2( 1.7, 1.7 )
-z_index = -1
+[node name="floor" type="RayCast2D" parent="."]
+enabled = true
+cast_to = Vector2( 0, 33 )
 
-[node name="Icon" type="Sprite" parent="AnimationPlayer/Node2D"]
-position = Vector2( -35.8824, 0.588235 )
-scale = Vector2( 0.7, 1.00588 )
-texture = ExtResource( 4 )
+[node name="climb" type="Node2D" parent="."]
+scale = Vector2( 1, 1 )
+
+[node name="over_the_head" type="RayCast2D" parent="climb"]
+position = Vector2( 0, -40 )
+enabled = true
+cast_to = Vector2( 20, 0 )
+collision_mask = 2
+
+[node name="head" type="RayCast2D" parent="climb"]
+position = Vector2( 0, -30 )
+enabled = true
+cast_to = Vector2( 15, 0 )
+collision_mask = 2
 
 [connection signal="animation_finished" from="AnimationPlayer" to="." method="_on_AnimationPlayer_animation_finished"]
